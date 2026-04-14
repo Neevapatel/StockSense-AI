@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+    <div class="bg-white p-5 rounded-xl shadow-sm mb-6 flex justify-between items-center border border-slate-100">
+        <div>
+            <h2 class="text-2xl font-black text-slate-800 tracking-tighter">{{ symbol }}</h2>
+            <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Real-time Terminal Data</p>
+        </div>
+        <div class="text-right">
+            <p class="text-3xl font-black text-slate-900 tracking-tighter">
+                <span class="text-2xl font-bold mr-1.5 text-slate-400">{% if ".NS" in symbol or ".BO" in symbol %}₹{% else %}${% endif %}</span>{{ quote.current }}
+            </p>
+            <p class="text-xs font-bold mt-1 {% if quote.change >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                {{ '+' if quote.change >= 0 }}{{ quote.change }} ({{ quote.percent }}%)
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        <div class="bg-white p-5 rounded-xl shadow-sm border-t-4 {% if rec == 'BUY' %}border-emerald-500{% elif rec == 'SELL' %}border-rose-500{% else %}border-amber-500{% endif %}">
+            <h3 class="text-slate-500 uppercase text-[10px] font-black tracking-widest">AI Verdict</h3>
+            <p class="text-2xl font-black mt-2 text-slate-800 tracking-tight">{{ rec }}</p>
+            <p class="text-[11px] text-slate-600 mt-4 leading-relaxed font-medium">
+                Analysis based on momentum vs previous close of 
+                <span class="font-bold text-slate-800">{% if ".NS" in symbol or ".BO" in symbol %}₹{% else %}${% endif %}{{ quote.prev_close }}</span>.
+            </p>
+        </div>
+
+        <div class="bg-slate-900 p-5 rounded-xl shadow-lg text-white border-t-4 border-indigo-500">
+            <h3 class="text-indigo-400 uppercase text-[10px] font-black tracking-widest">LSTM Price Projection</h3>
+            <p class="text-3xl font-black mt-2 tracking-tight">
+                <span class="text-2xl font-bold text-indigo-500 mr-1.5">{% if ".NS" in symbol or ".BO" in symbol %}₹{% else %}${% endif %}</span>{{ predicted }}
+            </p>
+
+            <div class="mt-4">
+                <div class="flex justify-between items-end mb-1">
+                    <span class="text-[9px] font-black text-indigo-300 uppercase">Confidence</span>
+                    <span class="text-[10px] font-black text-indigo-200">{{ forecast_data[0][2] }}%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-1.5">
+                    <div class="bg-indigo-500 h-1.5 rounded-full" style="width: {{ forecast_data[0][2] }}%"></div>
+                </div>
+            </div>
+            <p class="text-[9px] text-slate-500 mt-4 italic font-medium">*Next session target price.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <div>
+                <h3 class="text-slate-800 text-[11px] font-black uppercase tracking-widest mb-4">Asset Snapshot</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between border-b border-slate-50 pb-2">
+                        <p class="text-[13px] font-bold text-slate-500">Prev Close</p>
+                        <p class="text-xs font-black text-slate-800">{% if ".NS" in symbol or ".BO" in symbol %}₹{% else %}${% endif %}{{ quote.prev_close }}</p>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-50 pb-2">
+                        <p class="text-[13px] font-bold text-slate-500">Day Change</p>
+                        <p class="text-xs font-black {% if quote.change >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                            {% if ".NS" in symbol or ".BO" in symbol %}₹{% else %}${% endif %}{{ quote.change }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="window.location.href='/dashboard'"
+                class="mt-4 w-full bg-slate-50 text-slate-600 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-slate-100">
+                ← Back to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-8">
+        <h3 class="text-sm font-black mb-6 text-slate-800 uppercase tracking-widest flex items-center gap-2">
+            
+                <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                5-Day Forecast Horizon
+        </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="overflow-x-auto rounded-lg border border-slate-50">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                            <th class="py-3 px-4">Date</th>
+                            <th class="py-3 px-4">Est. Price</th>
+                            <th class="py-3 px-4 text-right">Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for date, price, conf in forecast_data %}
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="py-3 px-4 font-bold text-slate-600 text-sm">{{ date }}</td>
+                            <td class="py-3 px-4 font-black text-indigo-600 text-sm">
+                                <span class="text-indigo-600 mr-1">{% if ".NS" in symbol or ".BO" in symbol %}₹{% else %}${% endif %}</span>{{ price }}
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="flex items-center justify-end gap-3">
+                                    <div class="w-20 bg-slate-200 rounded-full h-1.5">
+                                        <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ conf }}%"></div>
+                                    </div>
+                                    <span class="text-[13px] font-black text-slate-400">{{ conf }}%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="h-64 lg:h-full min-h-[250px] bg-slate-50/30 rounded-xl p-4">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mt-8 mb-12">
+        <h3 class="text-sm font-black mb-6 text-slate-800 uppercase tracking-widest flex items-center gap-2">
+            
+                <svg class="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                30-Day Historical Context: {{ symbol }}
+            
+        </h3>
+        <div style="position: relative; height:35vh; width:100%">
+            <canvas id="historyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const forecastCanvas = document.getElementById('forecastChart');
+        if (forecastCanvas) {
+            const forecastCtx = forecastCanvas.getContext('2d');
+            new Chart(forecastCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ forecast_data|map(attribute=0)|list|tojson|safe }},
+                    datasets: [{
+                        label: 'Predicted Trend',
+                        data: {{ forecast_data|map(attribute=1)|list|tojson|safe }},
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 10 }, color: '#94a3b8' } },
+                        y: { grid: { color: '#f1f5f9' }, ticks: { font: { weight: 'bold', size: 10 }, color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        const historyCanvas = document.getElementById('historyChart');
+        if (historyCanvas) {
+            const historyCtx = historyCanvas.getContext('2d');
+            const hLabels = {{ history.labels | tojson | safe if history else [] }};
+            const hPrices = {{ (history.prices if history.prices else history.values) | tojson | safe if history else [] }};
+
+            new Chart(historyCtx, {
+                type: 'line',
+                data: {
+                    labels: hLabels,
+                    datasets: [{
+                        label: 'Historical Close',
+                        data: hPrices,
+                        borderColor: '#0d9488',
+                        backgroundColor: 'rgba(13, 148, 136, 0.05)',
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: false, 
+                            // Light grid lines enabled
+                            grid: { color: '#f1f5f9', display: true },
+                            ticks: { color: '#64748b', font: { weight: 'bold', size: 11 } }
+                        },
+                        x: { 
+                            // Light grid lines enabled
+                            grid: { color: '#f1f5f9', display: true },
+                            ticks: { color: '#64748b', font: { weight: 'bold', size: 10 }, maxRotation: 45, minRotation: 45 }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

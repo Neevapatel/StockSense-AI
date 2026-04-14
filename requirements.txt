@@ -1,0 +1,31 @@
+# --- Core Web & Database ---
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Bcrypt
+PyMySQL
+cryptography
+python-dotenv
+requests
+pytz
+
+# --- Data Science & AI ---
+numpy
+pandas
+yfinance
+scikit-learn
+scipy
+joblib
+
+# --- Deep Learning & Model Support ---
+tensorflow
+h5py
+
+# --- Visualization & Analytics ---
+matplotlib
+
+# --- System Monitoring ---
+psutil
+
+# --- External APIs ---
+finnhub-python

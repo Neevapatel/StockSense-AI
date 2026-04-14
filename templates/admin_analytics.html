@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* Interactive Zoom Effect for Graphs */
+    .plot-card img {
+        transition: transform 0.3s ease;
+        cursor: zoom-in;
+    }
+    .plot-card img:hover {
+        transform: scale(1.02);
+    }
+    /* Modal / Lightbox for Full View */
+    #imageModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(8px);
+    }
+    /* Shimmer effect for the Retrain button */
+    @keyframes shimmer { 
+        100% { transform: translateX(100%); } 
+    }
+</style>
+
+<div class="max-w-7xl mx-auto px-6 py-6">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-50 p-2 rounded-xl text-indigo-600 border border-indigo-100 shadow-sm">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-slate-800 tracking-tight leading-none">System & AI Analytics</h2>
+                <p class="text-slate-400 text-xs mt-1 font-medium">Monitoring hardware performance and model health.</p>
+            </div>
+        </div>
+        
+        <form action="{{ url_for('run_training') }}" method="POST">
+            <button type="submit" class="group relative bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold transition-all duration-300 shadow-md flex items-center gap-2 overflow-hidden active:scale-95">
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></span>
+                <span class="text-lg">🔄</span>
+                <span class="text-sm">Retrain All Models</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">CPU Utilization</p>
+            <p class="text-2xl font-black text-indigo-600">{{ sys_info.cpu_usage }}%</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Memory (RAM)</p>
+            <p class="text-2xl font-black text-purple-600">{{ sys_info.ram_usage }}%</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Storage Available</p>
+            <p class="text-2xl font-black text-green-600">{{ sys_info.disk_free }} GB</p>
+        </div>
+    </div>
+
+    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <span>🧠 Model Training Analytics</span>
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for plot in trained_plots %}
+        <div class="plot-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full transition-all hover:shadow-md">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-black text-indigo-900 text-sm tracking-tight">{{ plot.split('_')[0] }}</span>
+                <span class="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">HEALTHY</span>
+            </div>
+            
+            <div class="flex-grow flex items-center justify-center bg-white rounded-xl overflow-hidden mb-3">
+                <img src="{{ url_for('static', filename='plots/' + plot) }}" 
+                     onclick="openZoom(this.src)"
+                     class="w-full object-contain max-h-[180px]" 
+                     alt="Training Plot">
+            </div>
+            
+            <p class="text-[9px] text-slate-400 font-medium italic">
+                {% if 'loss' in plot.lower() %}
+                    Loss should decrease as epochs increase.
+                {% else %}
+                    Predicted price should trend with the actual price.
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="imageModal" onclick="this.style.display='none'" class="flex items-center justify-center p-4">
+    <div class="relative max-w-4xl w-full">
+        <img id="modalImg" src="" class="w-full rounded-2xl shadow-2xl border-4 border-white/10">
+        <p class="text-center text-white/50 text-xs mt-4">Click anywhere to close</p>
+    </div>
+</div>
+
+<script>
+    function openZoom(src) {
+        document.getElementById('modalImg').src = src;
+        document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    const styleSheet = document.createElement('style');
+    styleSheet.innerHTML = `@keyframes shimmer { 100% { transform: translateX(100%); } }`;
+    document.head.appendChild(styleSheet);
+</script>
+
+{% endblock %}

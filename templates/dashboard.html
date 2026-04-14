@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <div class="lg:col-span-8 space-y-6">
+
+            <div id="loading-flash"
+                class="hidden p-3 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center shadow-sm">
+                <div class="mr-3 animate-spin text-indigo-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-indigo-900 tracking-tight">AI Engine Processing</p>
+                    <p class="text-[10px] text-indigo-600 font-medium uppercase tracking-widest">Optimizing LSTM
+                        Weights...</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                    <div class="text-indigo-600"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg></div>
+                    <h3 class="text-[13px] font-black text-slate-800 uppercase tracking-widest">Market Intelligence</h3>
+                </div>
+
+                <div class="p-6">
+                    <form id="predict-form" action="/predict" method="POST" class="flex gap-2">
+                        <input type="text" name="symbol" placeholder="Search symbol (e.g. RELIANCE.NS)"
+                            class="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-bold text-[13px] transition-all"
+                            required>
+                        <button type="submit"
+                            class="bg-transparent border border-slate-800 text-slate-800 px-8 py-2.5 rounded-lg font-black text-[13px] hover:bg-slate-800 hover:text-white transition active:scale-95 shadow-sm">Predict</button>
+                    </form>
+
+                    <div class="mt-6 p-5 bg-slate-50 rounded-lg border border-slate-200">
+                        <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3">Comparison
+                            Framework</p>
+                        <form action="/compare" method="POST" class="flex flex-wrap md:flex-nowrap gap-3">
+                            <input type="text" name="symbol1" placeholder="Symbol A"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold focus:border-indigo-400 outline-none transition-all"
+                                required>
+                            <input type="text" name="symbol2" placeholder="Symbol B"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold focus:border-indigo-400 outline-none transition-all"
+                                required>
+                            <button
+                                class="w-full md:w-auto bg-transparent border border-indigo-600 text-indigo-600 px-6 py-2 rounded-lg font-black text-xs hover:bg-indigo-600 hover:text-white transition whitespace-nowrap">Run
+                                Comparison</button>
+                        </form>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for index in indices %}
+                        <div
+                            class="px-5 py-4 rounded-lg border transition-all 
+                            {% if index.percent >= 0 %}bg-emerald-50/30 border-emerald-100{% else %}bg-rose-50/30 border-rose-100{% endif %}">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h5
+                                        class="text-[10px] font-black uppercase tracking-widest {% if index.percent >= 0 %}text-emerald-800{% else %}text-rose-800{% endif %}">
+                                        {{ index.name }}
+                                    </h5>
+                                    <p class="text-xl font-black text-slate-900 mt-1 leading-none flex items-center">
+                                        <span class="text-base font-bold mr-2 text-slate-500">{% if 'NIFTY' in
+                                            index.name.upper() or 'SENSEX' in index.name.upper() %}₹{% else %}${% endif
+                                            %}</span>
+                                        {{ "{:,.2f}".format(index.price) }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span
+                                        class="px-2 py-1 rounded text-[10px] font-black {% if index.percent >= 0 %}bg-emerald-100 text-emerald-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                                        {% if index.percent >= 0 %}▲{% else %}▼{% endif %} {{ index.percent }}%
+                                    </span>
+                                    <p class="text-[10px] font-bold mt-1 text-slate-600">
+                                        {{ '+' if index.change > 0 }}{{ "{:,.2f}".format(index.change) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                    <div class="text-slate-600"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg></div>
+                    <h3 class="text-[13px] font-black text-slate-800 uppercase tracking-widest">Prediction History</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr
+                                class="text-slate-600 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
+                                <th class="py-3 px-6">Asset</th>
+                                <th class="py-3 px-6">Value</th>
+                                <th class="py-3 px-6">Signal</th>
+                                <th class="py-3 px-6 text-right">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for pred in recent_preds %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="py-3 px-6 font-black text-slate-900 text-[13px]">{{ pred.symbol }}</td>
+                                <td class="py-3 px-6 text-[13px] font-bold text-slate-700">
+                                    <span class="mr-1 text-slate-500 font-bold">{% if ".NS" in pred.symbol or ".BO" in
+                                        pred.symbol %}₹{% else %}${% endif %}</span>{{ pred.price }}
+                                </td>
+                                <td class="py-3 px-6">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase border 
+                                        {% if pred.recommendation == 'BUY' %}bg-emerald-50 text-emerald-700 border-emerald-100
+                                        {% elif pred.recommendation == 'SELL' %}bg-rose-50 text-rose-700 border-rose-100
+                                        {% else %}bg-amber-50 text-amber-700 border-amber-100{% endif %}">
+                                        {{ pred.recommendation }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-6 text-right text-slate-600 text-[10px] font-bold">{{
+                                    pred.created_at.strftime('%d %b, %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-[13px] font-black text-slate-800 uppercase tracking-widest">Trending Assets</h3>
+                        <div id="market-status"
+                            class="flex items-center gap-1.5 px-2 py-0.5 rounded-full border {% if is_market_open %}bg-emerald-50 border-emerald-100 text-emerald-600{% else %}bg-slate-50 border-slate-100 text-slate-500{% endif %} transition-all duration-500">
+                            <span class="relative flex h-1.5 w-1.5">
+                                {% if is_market_open %}
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                {% else %}
+                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-slate-400"></span>
+                                {% endif %}
+                            </span>
+                            <span class="text-[9px] font-black uppercase tracking-tighter">{{ 'Live' if is_market_open
+                                else 'Closed' }}</span>
+                        </div>
+                    </div>
+                    <button onclick="refreshTrending()" id="refresh-btn"
+                        class="text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-md transition-all">
+                        <svg id="refresh-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="trending-container" class="p-2 space-y-1">
+                    {% for stock in trending %}
+                    <div
+                        class="flex justify-between items-center p-2.5 rounded-lg hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                        <div>
+                            <form action="/predict" method="POST" class="m-0 inline">
+                                <input type="hidden" name="symbol" value="{{ stock.symbol }}">
+                                <button type="submit"
+                                    class="font-black text-indigo-600 hover:underline text-[13px] tracking-tight">{{
+                                    stock.symbol }}</button>
+                            </form>
+                            <p class="text-[11px] text-slate-500 font-bold">{% if ".NS" in stock.symbol or ".BO" in
+                                stock.symbol %}₹{% else %}${% endif %}{{ stock.current }}</p>
+                        </div>
+                        <span
+                            class="text-[13px] font-black {% if stock.change >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                            {{ '+' if stock.change >= 0 }}{{ stock.percent }}%
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/30">
+                    <h3 class="text-[13px] font-black text-slate-800 uppercase tracking-widest">Market Feed</h3>
+                </div>
+                <div id="news-list" class="divide-y divide-slate-100">
+                    {% for item in news %}
+                    <div class="p-4 hover:bg-slate-50 transition-all group">
+                        <a href="{{ item.url }}" target="_blank"
+                            class="text-[13px] font-bold text-slate-700 group-hover:text-indigo-600 leading-snug block">{{
+                            item.headline }}</a>
+                        <p class="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-2">{{ item.source
+                            }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const predictForm = document.getElementById('predict-form');
+        const loadingFlash = document.getElementById('loading-flash');
+        if (predictForm && loadingFlash) {
+            predictForm.addEventListener('submit', function () {
+                loadingFlash.classList.remove('hidden');
+                loadingFlash.style.display = 'flex';
+                const btn = predictForm.querySelector('button[type="submit"]');
+                if (btn) { btn.disabled = true; btn.innerHTML = "Processing..."; }
+            });
+        }
+    });
+
+    async function refreshTrending() {
+        const icon = document.getElementById('refresh-icon');
+        const container = document.getElementById('trending-container');
+        const statusBadge = document.getElementById('market-status');
+        icon.classList.add('animate-spin');
+        try {
+            const response = await fetch('/api/trending');
+            const data = await response.json();
+            if (data.success) {
+                // Update Market Status Badge dynamically
+                const isOpen = data.is_market_open;
+                statusBadge.className = `flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${isOpen ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-500'} transition-all duration-500`;
+                statusBadge.innerHTML = `
+                    <span class="relative flex h-1.5 w-1.5">
+                        ${isOpen ? '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>' : '<span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-slate-400"></span>'}
+                    </span>
+                    <span class="text-[9px] font-black uppercase tracking-tighter">${isOpen ? 'Live' : 'Closed'}</span>
+                `;
+
+                container.innerHTML = '';
+                data.stocks.forEach(stock => {
+                    const currency = (stock.symbol.includes('.NS') || stock.symbol.includes('.BO')) ? '₹' : '$';
+                    const colorClass = stock.change >= 0 ? 'text-emerald-700' : 'text-rose-700';
+                    const sign = stock.change >= 0 ? '+' : '';
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center p-2.5 rounded-lg hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                            <div>
+                                <form action="/predict" method="POST" class="m-0 inline">
+                                    <input type="hidden" name="symbol" value="${stock.symbol}">
+                                    <button type="submit" class="font-black text-indigo-600 hover:underline text-[13px] tracking-tight">${stock.symbol}</button>
+                                </form>
+                                <p class="text-[11px] text-slate-500 font-bold">${currency}${stock.current}</p>
+                            </div>
+                            <span class="text-[13px] font-black ${colorClass}">${sign}${stock.percent}%</span>
+                        </div>`;
+                });
+            }
+        } catch (error) { console.error(error); } finally { setTimeout(() => icon.classList.remove('animate-spin'), 500); }
+    }
+</script>
+{% endblock %}
