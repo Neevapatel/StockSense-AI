@@ -1,5 +1,6 @@
 import os
 import csv
+import sys
 import random
 import joblib
 import yfinance as yf
@@ -862,10 +863,11 @@ def run_training():
     try:
         with open("training_log.txt", "w") as lf:
             proc = subprocess.Popen(
-                ['python', 'train_top_10.py'],
-                stdout=lf,
-                stderr=lf,
-            )
+    [sys.executable, 'train_top_10.py'],
+    stdout=lf,
+    stderr=lf,
+    cwd=os.path.dirname(os.path.abspath(__file__))
+)
 
         # Write the child process PID into the lock file
         with open(TRAINING_LOCK, 'w') as lock_file:

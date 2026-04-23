@@ -42,7 +42,7 @@ WINDOW_SIZE   = 60      # Days of history fed into LSTM
 EPOCHS        = 50      # Max epochs — EarlyStopping will cut short
 BATCH_SIZE    = 32
 TRAIN_SPLIT   = 0.80    # 80% train, 20% test
-PATIENCE      = 7       # EarlyStopping patience
+PATIENCE      = 10       # EarlyStopping patience
 TRAINING_LOCK = "training.lock"
 
 # RAM safety gate: if free RAM drops below this (MB), skip remaining stocks
